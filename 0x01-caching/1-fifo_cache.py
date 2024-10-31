@@ -22,7 +22,6 @@ class FIFOCache(BaseCaching):
                     discarded = self.queue.pop(0)
                     del self.cache_data[discarded]
                     print(f"DISCARD: {discarded}")
-            
             self.cache_data[key] = item
             if key not in self.queue:
                 self.queue.append(key)
