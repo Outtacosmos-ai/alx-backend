@@ -26,3 +26,8 @@ msgstr "Welcome to Holberton"
 #: templates/3-index.html:9
 msgid "home_header"
 msgstr "Hello world!"
+
+#: templates/index.html:
+
+msgid "current_time_is"
+msgstr "The current time is %(current_time)s."
