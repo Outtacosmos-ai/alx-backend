@@ -1,13 +1,25 @@
 #!/usr/bin/env python3
 """
-Flask app with internationalization support and mock user login
+Basic Babel setup
 """
 from flask import Flask, render_template, request, g
-from flask_babel import Babel
+from flask_babel import Babel, gettext
 
 
 app = Flask(__name__)
 babel = Babel(app)
+
+
+class Config:
+    """
+    config for your Flask app
+    """
+    LANGUAGES = ["en", "fr"]
+    BABEL_DEFAULT_LOCALE = 'en'
+    BABEL_DEFAULT_TIMEZONE = 'UTC'
+
+
+app.config.from_object(Config)
 
 
 users = {
@@ -18,47 +30,40 @@ users = {
 }
 
 
-class Config:
-    """Configuration class for Flask app"""
-    LANGUAGES = ["en", "fr"]
-    BABEL_DEFAULT_LOCALE = "en"
-    BABEL_DEFAULT_TIMEZONE = "UTC"
-
-
-app.config.from_object(Config)
-
-
-def get_user():
+def get_user(id) -> dict:
     """
-    Returns a user dictionary or None if ID cannot be found
-    or if login_as was not passed
+    Mock logging in
     """
-    user_id = request.args.get('login_as')
-    if user_id:
-        return users.get(int(user_id))
-    return None
+    return users[int(id)] if id is not None else None
 
 
 @app.before_request
 def before_request():
     """
-    Use get_user to find a user if any,
-    and set it as a global on flask.g.user
+    Mock logging in
     """
-    g.user = get_user()
+    id = request.args.get('login_as', None)
+    g.user = get_user(id)
 
 
 @babel.localeselector
-def get_locale():
-    """Determine the best match with our supported languages"""
+def get_locale() -> str:
+    """
+    Get locale from request
+    """
+    lang = request.args.get('locale')
+    if lang and lang in app.config['LANGUAGES']:
+        return lang
     return request.accept_languages.best_match(app.config['LANGUAGES'])
 
 
-@app.route('/', methods=['GET'], strict_slashes=False)
-def index():
-    """Render the index page"""
-    return render_template('5-index.html')
+@app.route('/', strict_slashes=False)
+def main() -> str:
+    """
+    simply outputs Welcome to Holberton
+    """
+    return render_template('5-index.html', user=g.user)
 
 
-if __name__ == "__main__":
-    app.run(host="0.0.0.0", port="5000")
+if __name__ == '__main__':
+    app.run(debug=True)
