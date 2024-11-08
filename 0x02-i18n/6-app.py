@@ -8,13 +8,6 @@ from flask_babel import Babel
 app = Flask(__name__)
 babel = Babel(app)
 
-users = {
-    1: {"name": "Balou", "locale": "fr", "timezone": "Europe/Paris"},
-    2: {"name": "Beyonce", "locale": "en", "timezone": "US/Central"},
-    3: {"name": "Spock", "locale": "kg", "timezone": "Vulcan"},
-    4: {"name": "Teletubby", "locale": None, "timezone": "Europe/London"},
-}
-
 
 class Config:
     """Configuration class for Flask app"""
@@ -25,15 +18,25 @@ class Config:
 
 app.config.from_object(Config)
 
+users = {
+    1: {"name": "Balou", "locale": "fr", "timezone": "Europe/Paris"},
+    2: {"name": "Beyonce", "locale": "en", "timezone": "US/Central"},
+    3: {"name": "Spock", "locale": "kg", "timezone": "Vulcan"},
+    4: {"name": "Teletubby", "locale": None, "timezone": "Europe/London"},
+}
+
 
 def get_user():
     """
     Returns a user dictionary or None if ID cannot be found
     or if login_as was not passed
     """
-    user_id = request.args.get('login_as')
-    if user_id:
-        return users.get(int(user_id))
+    try:
+        user_id = request.args.get('login_as')
+        if user_id:
+            return users.get(int(user_id))
+    except Exception:
+        return None
     return None
 
 
@@ -57,11 +60,16 @@ def get_locale():
         return locale
 
     # 2. Locale from user settings
-    if g.user and g.user['locale'] in app.config['LANGUAGES']:
+    if g.user and g.user.get('locale') in app.config['LANGUAGES']:
         return g.user['locale']
 
     # 3. Locale from request header
-    return request.accept_languages.best_match(app.config['LANGUAGES'])
+    header_locale = request.accept_languages.best_match(app.config['LANGUAGES'])
+    if header_locale:
+        return header_locale
+
+    # 4. Default locale
+    return app.config['BABEL_DEFAULT_LOCALE']
 
 
 @app.route('/', methods=['GET'], strict_slashes=False)
